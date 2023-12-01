@@ -26,15 +26,22 @@ function checkStringIsNumber(string) {
 }
 
 function identifyNumbersWrittenInLetters(string) {
-  const numbersFound = numbersWrittenInLetters
-    .map(({ numberInLetters, digit }) => {
-      const result = string.indexOf(numberInLetters);
-      if (result != -1) return { number: digit, index: result };
-    })
-    .filter(Boolean);
+  const numbersFound = []
+  numbersWrittenInLetters
+    .forEach(({ numberInLetters, digit }) => {
+      let index = string.indexOf(numberInLetters)
+
+      // Add until no more repeated numbers
+      while (index != -1) {
+        numbersFound.push({ number: digit, index })
+        index = string.indexOf(numberInLetters, index + 1)
+      }
+
+    });
 
   return numbersFound;
 }
+
 function identifyNumbers(string) {
   return string
     .split("")
@@ -72,7 +79,6 @@ function recalculateCalibration(firstNumber, lastNumber) {
 
 rl.on("line", (line) => {
   const numbers = identifyNumbers(line);
-
   const letters = identifyNumbersWrittenInLetters(line);
 
   if (!numbers.length) {
@@ -88,21 +94,13 @@ rl.on("line", (line) => {
     recalculateCalibration(numbers[0].number, numbers.pop().number);
     return;
   }
+  const finalNumbers = numbers.concat(letters)
+  const indexes = findIndexes(finalNumbers);
 
-  const numberIndexes = findIndexes(numbers);
-  const lettersIndexes = findIndexes(letters);
-
-  const firstNumber =
-    numberIndexes.first.index < lettersIndexes.first.index
-      ? numberIndexes.first.number
-      : lettersIndexes.first.number;
-
-  const lastNumber =
-    numberIndexes.last.index > lettersIndexes.last.index
-      ? numberIndexes.last.number
-      : lettersIndexes.last.number;
-
-  recalculateCalibration(firstNumber, lastNumber);
+  recalculateCalibration(
+    indexes.first.number,
+    indexes.last.number
+  );
 });
 
 rl.on("close", () => {
