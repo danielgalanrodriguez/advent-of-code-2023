@@ -3,7 +3,7 @@
 const fs = require("fs");
 const readline = require("readline");
 
-const fileStream = fs.createReadStream("test_data.txt");
+const fileStream = fs.createReadStream("puzzle.txt");
 const rl = readline.createInterface({
   input: fileStream,
   crlfDelay: Infinity,
@@ -26,19 +26,32 @@ function getNumbers(card) {
   }
 }
 
-function checkNumbers({ winning, play }) {
+function checkCorrectNumbers({ winning, play }) {
   let correctNumbers = 0
-  winning.split(' ').forEach(winningNumber => {
-    if (play.includes(winningNumber)) correctNumbers++
+  let correctNumbersArray = [] 
+  const playArray = play.split(' ').filter(Boolean)
+  winning.split(' ').filter(Boolean).forEach(winningNumber => {
+    if (playArray.includes(winningNumber)) {
+      correctNumbers++
+      correctNumbersArray.push(winningNumber)    
+    }
   });
+  return correctNumbers
+}
 
-  console.log('correctNumbers: ', correctNumbers);
+function updateTotalPoints(amountOfCorrectNumbers) {
+  const timesToDouble = amountOfCorrectNumbers - 1
+  let pointsToAdd = 0
+  if(amountOfCorrectNumbers === 0) return
+
+  pointsToAdd = Math.pow(2, timesToDouble)
+  totalPoints +=  Math.pow(2, timesToDouble)
 }
 
 rl.on("line", (card) => {
   const numbers = getNumbers(card)
-  console.log('numbers: ', numbers);
-  checkNumbers(numbers)
+  const correctNumbers = checkCorrectNumbers(numbers)
+  updateTotalPoints(correctNumbers)
 
 });
 
