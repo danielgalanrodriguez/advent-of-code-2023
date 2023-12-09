@@ -1,22 +1,26 @@
 // problem_1.txt
 
 const readFile = require("../readFile");
-const seedsData = {};
+let seeds = [];
+let seedsData = {};
+let currentStep = "";
+let lastStep = "";
 
-function identifyStep(line) {
-  console.log("line: ", line);
-  const step = line.split(" ")[0];
-  console.log("step: ", step, /seeds/.test(step));
+function identifyLine(line) {
+  if (line.length === 0) return;
+  const step = line.split(":")[0];
 
-  if (!/:/.test(step)) {
-    console.log("number line");
-    return;
-  }
   if (/seeds/.test(step)) {
     saveSeedsNumbers(line.split(":")[1]);
     return;
   }
-  if (/seed-to-soil*/.test(step)) translateSeedToSoil(line.split(":")[1]);
+  if (/map/.test(step)) {
+    currentStep = step;
+    return;
+  }
+  const data = line.split(" ").map((data) => Number(data));
+  translateSeedToSoil(data);
+  lastStep = currentStep;
 }
 
 function saveSeedsNumbers(data) {
@@ -24,13 +28,43 @@ function saveSeedsNumbers(data) {
 
   seedNumbers.forEach((seedNumber) => {
     seedsData[seedNumber] = {};
+    seeds.push(Number(seedNumber));
   });
 }
 
-function translateSeedToSoil() {}
+function translateSeedToSoil(data) {
+  const [destinationRangeStart, sourceRangeStart, rangeLength] = data;
+  const adaptedRange = rangeLength == 0 ? 0 : rangeLength - 1;
+  const sourceRangeEnd = sourceRangeStart + adaptedRange;
+  // keep track of already valid translations
+  seeds.forEach((seed) => {
+    let numberToTranslate = seedsData[seed][currentStep];
+    if (numberToTranslate == undefined)
+      numberToTranslate = seedsData[seed][lastStep];
+    if (numberToTranslate == undefined) numberToTranslate = seed;
+
+    seedsData[seed][currentStep] = numberToTranslate;
+
+    if (
+      seedsData[seed][lastStep] != undefined &&
+      seedsData[seed][lastStep] != seedsData[seed][currentStep]
+    ) {
+      return;
+    }
+
+    if (
+      sourceRangeStart <= numberToTranslate &&
+      numberToTranslate <= sourceRangeEnd
+    ) {
+      //calculate destination range
+      let lengthToAdd = numberToTranslate - sourceRangeStart;
+      seedsData[seed][currentStep] = destinationRangeStart + lengthToAdd;
+    }
+  });
+}
 
 function readLine(line) {
-  identifyStep(line);
+  identifyLine(line);
 }
 
 function onEnd() {
