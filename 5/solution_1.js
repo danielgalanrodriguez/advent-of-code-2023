@@ -6,8 +6,12 @@ let seedsData = {};
 let currentStep = "";
 let lastStep = "";
 
-function identifyLine(line) {
-  if (line.length === 0) return;
+function processLine(line) {
+  if (line.length === 0) {
+    if (currentStep) lastStep = currentStep;
+    return
+  };
+
   const step = line.split(":")[0];
 
   if (/seeds/.test(step)) {
@@ -20,7 +24,6 @@ function identifyLine(line) {
   }
   const data = line.split(" ").map((data) => Number(data));
   translateSeedToSoil(data);
-  lastStep = currentStep;
 }
 
 function saveSeedsNumbers(data) {
@@ -34,9 +37,9 @@ function saveSeedsNumbers(data) {
 
 function translateSeedToSoil(data) {
   const [destinationRangeStart, sourceRangeStart, rangeLength] = data;
-  const adaptedRange = rangeLength == 0 ? 0 : rangeLength - 1;
+  const adaptedRange = rangeLength - 1;
   const sourceRangeEnd = sourceRangeStart + adaptedRange;
-  // keep track of already valid translations
+
   seeds.forEach((seed) => {
     let numberToTranslate = seedsData[seed][currentStep];
     if (numberToTranslate == undefined)
@@ -45,11 +48,15 @@ function translateSeedToSoil(data) {
 
     seedsData[seed][currentStep] = numberToTranslate;
 
-    if (
-      seedsData[seed][lastStep] != undefined &&
-      seedsData[seed][lastStep] != seedsData[seed][currentStep]
-    ) {
-      return;
+    // First step
+    if (seedsData[seed][lastStep] == undefined) {
+      if (seedsData[seed][currentStep] != numberToTranslate) return
+    }
+    else {
+      // Rest of the steps
+      if (seedsData[seed][lastStep] != seedsData[seed][currentStep]) {
+        return;
+      }
     }
 
     if (
@@ -63,12 +70,20 @@ function translateSeedToSoil(data) {
   });
 }
 
-function readLine(line) {
-  identifyLine(line);
-}
-
 function onEnd() {
-  console.log("Finished reading the file. Solution:", seedsData);
+  const lowestLocationNumber = getLowestLocationNumber()
+  console.log('seedsData: ', seedsData);
+  console.log("Finished reading the file. Solution:", lowestLocationNumber);
 }
 
-readFile("test_data.txt", readLine, onEnd);
+function getLowestLocationNumber() {
+  let lowestLocation = seedsData[seeds[0]]['humidity-to-location map']
+
+  seeds.forEach(seed => {
+    const seedLocation = seedsData[seed]['humidity-to-location map']
+    if(seedLocation < lowestLocation) lowestLocation = seedLocation
+  })
+  return lowestLocation
+}
+
+readFile("puzzle.txt", processLine, onEnd);
