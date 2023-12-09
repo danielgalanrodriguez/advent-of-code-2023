@@ -39,9 +39,9 @@ function processInstructions(initialPositions) {
                 return findPosition(position[direction])
                 
             });
+            if (steps % 1000000 == 0) console.log('Current step',new Intl.NumberFormat().format(steps))
             if (isFinalPath(currentPositions)) break;
         }
-        if (steps % 5000 == 0) console.log(new Intl.NumberFormat().format(steps))
     }
 
 }
@@ -57,6 +57,7 @@ function isFinalPath(positions) {
 }
 
 getElements()
+console.log('Current step', steps);
 const initialPositions = findAllInitialPositions()
 processInstructions(initialPositions)
 console.log('Final node found. Result:', steps);

@@ -37,6 +37,8 @@ function saveSeedsNumbers(data) {
   const seedRanges = data.trim().split(" ").filter(Boolean);
   let seedRangeStart = Number(seedRanges[rangeStartIndex])
   let seedRangeLength = Number(seedRanges[rangeLengthIndex])
+  
+  if (currentIndex % 50000 == 0) logProgress(currentIndex,seedRangeLength)
 
   seed = seedRangeStart + currentIndex
   currentIndex++
@@ -88,7 +90,6 @@ function getLowestLocationNumber() {
 }
 
 function processFile() {
-
   console.log('rangeStartIndex: ', rangeStartIndex);
   readFile();
 
@@ -110,3 +111,10 @@ function readFile() {
 
 processFile()
 
+
+
+function logProgress(index,totalRange) {
+  const formattedIndex = new Intl.NumberFormat().format(index)
+  const formattedRange= new Intl.NumberFormat().format(totalRange)
+  console.log(`progress: ${formattedIndex}/${formattedRange}`)
+}
