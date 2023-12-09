@@ -1,7 +1,8 @@
 // problem_2.txt
 // refactored to process 1 seed at a time to about memory problems
 // needs to have a sync readfile
-const readFile = require("../readFile");
+const fs = require("fs");
+const file = fs.readFileSync("puzzle.txt", { encoding: "utf8" })
 let seedDataLength = 1
 let rangeStartIndex = 0
 let rangeLengthIndex = rangeStartIndex + 1
@@ -36,15 +37,12 @@ function saveSeedsNumbers(data) {
   const seedRanges = data.trim().split(" ").filter(Boolean);
   let seedRangeStart = Number(seedRanges[rangeStartIndex])
   let seedRangeLength = Number(seedRanges[rangeLengthIndex])
-  console.log('seedRanges.length: ', seedRanges.length);
-  console.log('seedRangeStart: ', seedRangeStart);
-  console.log('seedRangeLength: ', seedRangeLength);
-
 
   seed = seedRangeStart + currentIndex
   currentIndex++
   if (currentIndex >= seedRangeLength) {
     rangeStartIndex += 2
+    console.log('rangeStartIndex: ', rangeStartIndex);
     rangeLengthIndex = rangeStartIndex + 1
   }
 }
@@ -53,57 +51,61 @@ function translateSeedToSoil(data) {
   const [destinationRangeStart, sourceRangeStart, rangeLength] = data;
   const adaptedRange = rangeLength - 1;
   const sourceRangeEnd = sourceRangeStart + adaptedRange;
- 
-    let numberToTranslate = seedData[currentStep];
-    if (numberToTranslate == undefined)
-      numberToTranslate = seedData[lastStep];
-    if (numberToTranslate == undefined) numberToTranslate = seed;
 
-    seedData[currentStep] = numberToTranslate;
+  let numberToTranslate = seedData[currentStep];
+  if (numberToTranslate == undefined)
+    numberToTranslate = seedData[lastStep];
+  if (numberToTranslate == undefined) numberToTranslate = seed;
 
-    // First step
-    if (seedData[lastStep] == undefined) {
-      if (seedData[currentStep] != numberToTranslate) return
+  seedData[currentStep] = numberToTranslate;
+
+  // First step
+  if (seedData[lastStep] == undefined) {
+    if (seedData[currentStep] != numberToTranslate) return
+  }
+  else {
+    // Rest of the steps
+    if (seedData[lastStep] != seedData[currentStep]) {
+      return;
     }
-    else {
-      // Rest of the steps
-      if (seedData[lastStep] != seedData[currentStep]) {
-        return;
-      }
-    }
+  }
 
-    if (
-      sourceRangeStart <= numberToTranslate &&
-      numberToTranslate <= sourceRangeEnd
-    ) {
-      //calculate destination range
-      let lengthToAdd = numberToTranslate - sourceRangeStart;
-      seedData[seed][currentStep] = destinationRangeStart + lengthToAdd;
-    }
+  if (
+    sourceRangeStart <= numberToTranslate &&
+    numberToTranslate <= sourceRangeEnd
+  ) {
+    //calculate destination range
+    let lengthToAdd = numberToTranslate - sourceRangeStart;
+    seedData[currentStep] = destinationRangeStart + lengthToAdd;
+  }
 
-}
-
-function onEnd() {
-  const lowestLocationNumber = getLowestLocationNumber()
-  console.log("Finished reading the file. Solution:", lowestLocationNumber);
 }
 
 function getLowestLocationNumber() {
-    const seedLocation = seedData['humidity-to-location map']
-    if(lowestLocation == -1) lowestLocation = seedLocation
-    if (seedLocation < lowestLocation) lowestLocation = seedLocation
+  const seedLocation = seedData['humidity-to-location map']
+  if (lowestLocation == -1) lowestLocation = seedLocation
+  if (seedLocation < lowestLocation) lowestLocation = seedLocation
 }
 
-async function processFile() {
+function processFile() {
 
-  await readFile("test_data.txt", processLine, onEnd);
+  console.log('rangeStartIndex: ', rangeStartIndex);
+  readFile();
 
   while (rangeStartIndex < seedDataLength) {
-   await readFile("test_data.txt", processLine, onEnd);
+    readFile();
   }
+  console.log("Finished processing all seeds. Solution:", lowestLocation);
 
-  console.log("Finished processing all seeds. Solution:", lowestLocationNumber);
+}
 
+function readFile() {
+  file.split(/\r?\n/).forEach((line) => {
+    processLine(line)
+  });
+
+  getLowestLocationNumber()
+  seedData = {}
 }
 
 processFile()
